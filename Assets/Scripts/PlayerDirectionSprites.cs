@@ -4,15 +4,15 @@ using UnityEngine.InputSystem;
 [RequireComponent(typeof(Rigidbody2D))]
 public class PlayerMovementPhysics : MonoBehaviour
 {
-    [Header("�������")]
+    [Header("Спрайты")]
     public Sprite spriteFront;
     public Sprite spriteLeft;
     public Sprite spriteRight;
 
-    [Header("��������")]
-    public float speed = 5f;
+    [Header("Движение")]
+    public float speed = 2.5f;
 
-    [Header("������")]
+    [Header("Прыжок")]
     public float jumpForce = 7f;
     public Transform groundCheck;
     public float groundCheckRadius = 0.2f;
@@ -28,7 +28,7 @@ public class PlayerMovementPhysics : MonoBehaviour
     {
         spriteRenderer = GetComponent<SpriteRenderer>();
         rb = GetComponent<Rigidbody2D>();
-        rb.gravityScale = 1f;
+        rb.gravityScale = 3f;
         rb.freezeRotation = true;
         spriteRenderer.sprite = spriteFront;
     }
@@ -37,37 +37,34 @@ public class PlayerMovementPhysics : MonoBehaviour
     {
         if (Keyboard.current == null) return;
 
-        // �������� ����� ������ ����
+        // Проверка земли (если объект groundCheck назначен)
         if (groundCheck != null)
         {
             isGrounded = Physics2D.OverlapCircle(
                 groundCheck.position, groundCheckRadius, groundLayer);
         }
 
-        if (Keyboard.current.spaceKey.wasPressedThisFrame)
-            Debug.Log($"Space! isGrounded={isGrounded}, velY={rb.linearVelocity.y}");
-
-        // ���� �������� ������������� (����) � ����� �����������, �� �� ������� Y
+        // Если движение заблокировано
         if (!CanMove)
         {
             rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
             return;
         }
 
-        // --- �������������� �������� ---
+        // --- Горизонтальное движение ---
         float moveX = 0f;
         if (Keyboard.current.aKey.isPressed || Keyboard.current.leftArrowKey.isPressed) moveX = -1f;
         else if (Keyboard.current.dKey.isPressed || Keyboard.current.rightArrowKey.isPressed) moveX = 1f;
 
         rb.linearVelocity = new Vector2(moveX * speed, rb.linearVelocity.y);
 
-        // --- ������ ---
+        // --- Прыжок ---
         if (Keyboard.current.spaceKey.wasPressedThisFrame && isGrounded)
         {
             rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
         }
 
-        // --- ������� ---
+        // --- Смена спрайтов ---
         if (moveX < 0f) spriteRenderer.sprite = spriteLeft;
         else if (moveX > 0f) spriteRenderer.sprite = spriteRight;
         else spriteRenderer.sprite = spriteFront;
