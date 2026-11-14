@@ -4,15 +4,15 @@ using UnityEngine.InputSystem;
 [RequireComponent(typeof(Rigidbody2D))]
 public class PlayerMovementPhysics : MonoBehaviour
 {
-    [Header("Спрайты")]
+    [Header("пїЅпїЅпїЅпїЅпїЅпїЅпїЅ")]
     public Sprite spriteFront;
     public Sprite spriteLeft;
     public Sprite spriteRight;
 
-    [Header("Движение")]
-    public float speed = 2.5f;
+    [Header("пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ")]
+    public float speed = 5f;
 
-    [Header("Прыжок")]
+    [Header("пїЅпїЅпїЅпїЅпїЅпїЅ")]
     public float jumpForce = 7f;
     public Transform groundCheck;
     public float groundCheckRadius = 0.2f;
@@ -37,7 +37,7 @@ public class PlayerMovementPhysics : MonoBehaviour
     {
         if (Keyboard.current == null) return;
 
-        // Проверка земли каждый кадр
+        // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ
         if (groundCheck != null)
         {
             isGrounded = Physics2D.OverlapCircle(
@@ -47,27 +47,27 @@ public class PlayerMovementPhysics : MonoBehaviour
         if (Keyboard.current.spaceKey.wasPressedThisFrame)
             Debug.Log($"Space! isGrounded={isGrounded}, velY={rb.linearVelocity.y}");
 
-        // Если движение заблокировано (фаза) — гасим горизонталь, но не трогаем Y
+        // пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ (пїЅпїЅпїЅпїЅ) пїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ Y
         if (!CanMove)
         {
             rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
             return;
         }
 
-        // --- Горизонтальное движение ---
+        // --- пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ ---
         float moveX = 0f;
         if (Keyboard.current.aKey.isPressed || Keyboard.current.leftArrowKey.isPressed) moveX = -1f;
         else if (Keyboard.current.dKey.isPressed || Keyboard.current.rightArrowKey.isPressed) moveX = 1f;
 
         rb.linearVelocity = new Vector2(moveX * speed, rb.linearVelocity.y);
 
-        // --- Прыжок ---
+        // --- пїЅпїЅпїЅпїЅпїЅпїЅ ---
         if (Keyboard.current.spaceKey.wasPressedThisFrame && isGrounded)
         {
             rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
         }
 
-        // --- Спрайты ---
+        // --- пїЅпїЅпїЅпїЅпїЅпїЅпїЅ ---
         if (moveX < 0f) spriteRenderer.sprite = spriteLeft;
         else if (moveX > 0f) spriteRenderer.sprite = spriteRight;
         else spriteRenderer.sprite = spriteFront;

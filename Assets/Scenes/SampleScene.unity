@@ -185,7 +185,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 21300000, guid: 375ebd7de6b81f348bf414d8b0d57a42, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 1eb8142d63286db4eb12c1e755be8e63, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -687,7 +687,7 @@ Transform:
   m_GameObject: {fileID: 529830675}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 11.85, y: 0.89, z: -5.14}
+  m_LocalPosition: {x: -115.16, y: 0.89, z: -5.14}
   m_LocalScale: {x: 1.486189, y: 24.518787, z: 34.674995}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -719,7 +719,7 @@ Transform:
   m_GameObject: {fileID: 549154072}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -9.72, y: 0.89, z: -5.14}
+  m_LocalPosition: {x: 110.02, y: 0.89, z: -5.14}
   m_LocalScale: {x: 1.1368603, y: 24.518787, z: 34.674995}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1139,6 +1139,7 @@ MonoBehaviour:
   fadeDuration: 1
   invisibleDuration: 5
   animFrameRate: 0.1
+  disableAllColliders: 1
 --- !u!1 &1893612688
 GameObject:
   m_ObjectHideFlags: 0
