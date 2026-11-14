@@ -14,6 +14,10 @@ public class PlayerPhase : MonoBehaviour
     public float invisibleDuration = 5f;
     public float animFrameRate = 0.1f;
 
+    [Header("Физика в фазе")]
+    [Tooltip("Если включено, выключает коллайдеры и гравитацию (чтобы не провалиться сквозь пол)")]
+    public bool disableAllColliders = true;
+
     private SpriteRenderer spriteRenderer;
     private Rigidbody2D rb;
     private Collider2D[] colliders;
@@ -41,28 +45,46 @@ public class PlayerPhase : MonoBehaviour
     private IEnumerator PhaseCoroutine()
     {
         isPhasing = true;
+        float originalGravity = rb.gravityScale;
 
-        // 1. Исчезновение (1 сек) — движение заблокировано
-        if (movement != null) movement.enabled = false;
-        rb.linearVelocity = Vector2.zero;
+        // 1. Исчезновение (1 сек) — горизонтальное движение заблокировано
+        if (movement != null) movement.CanMove = false;
+        rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
         yield return FadeWithAnimation(1f, 0f);
 
-        // 2. Невидимость (5 сек) — движение РАЗБЛОКИРОВАНО, коллайдеры выключены
-        foreach (var col in colliders) col.enabled = false;
-        if (movement != null) movement.enabled = true;
+        // 2. Невидимость (5 сек) — движение РАЗБЛОКИРОВАНО
+        if (disableAllColliders)
+        {
+            rb.gravityScale = 0f; // Выключаем гравитацию, чтобы не улететь сквозь пол
+            rb.linearVelocity = Vector2.zero;
+            foreach (var col in colliders) col.enabled = false;
+        }
+
+        if (movement != null) movement.CanMove = true;
 
         yield return new WaitForSeconds(invisibleDuration);
 
-        // 3. Перед появлением — снова блокируем движение и включаем коллайдеры
-        if (movement != null) movement.enabled = false;
+        // 3. Перед появлением — снова блокируем движение и возвращаем коллайдеры
+        if (movement != null) movement.CanMove = false;
         rb.linearVelocity = Vector2.zero;
-        foreach (var col in colliders) col.enabled = true;
+
+        if (disableAllColliders)
+        {
+            foreach (var col in colliders) col.enabled = true;
+            rb.gravityScale = originalGravity;
+        }
 
         // 4. Появление (1 сек) — движение заблокировано
         yield return FadeWithAnimation(0f, 1f);
 
-        // 5. Возвращаем управление
-        if (movement != null) movement.enabled = true;
+        // 5. Возвращаем управление и базовый спрайт
+        if (movement != null)
+        {
+            if (movement.spriteFront != null)
+                spriteRenderer.sprite = movement.spriteFront;
+            movement.CanMove = true;
+        }
+
         isPhasing = false;
     }
 
@@ -77,11 +99,12 @@ public class PlayerPhase : MonoBehaviour
             elapsed += Time.deltaTime;
             frameTimer += Time.deltaTime;
 
-            if (frameTimer >= animFrameRate && phaseSprites.Length > 0)
+            if (frameTimer >= animFrameRate && phaseSprites != null && phaseSprites.Length > 0)
             {
                 frameTimer = 0f;
+                if (phaseSprites[frameIndex] != null)
+                    spriteRenderer.sprite = phaseSprites[frameIndex];
                 frameIndex = (frameIndex + 1) % phaseSprites.Length;
-                spriteRenderer.sprite = phaseSprites[frameIndex];
             }
 
             float alpha = Mathf.Lerp(fromAlpha, toAlpha, elapsed / fadeDuration);
