@@ -28,21 +28,24 @@ public class PlayerMovementPhysics : MonoBehaviour
     {
         spriteRenderer = GetComponent<SpriteRenderer>();
         rb = GetComponent<Rigidbody2D>();
-        rb.gravityScale = 1f;          // гравитация обязательна для прыжка
+        rb.gravityScale = 1f;
         rb.freezeRotation = true;
         spriteRenderer.sprite = spriteFront;
     }
 
     void Update()
     {
-        if (Keyboard.current.spaceKey.wasPressedThisFrame)
-            Debug.Log($"Space! isGrounded={isGrounded}, velY={rb.linearVelocity.y}");   
-
         if (Keyboard.current == null) return;
 
         // Проверка земли каждый кадр
-        isGrounded = Physics2D.OverlapCircle(
-            groundCheck.position, groundCheckRadius, groundLayer);
+        if (groundCheck != null)
+        {
+            isGrounded = Physics2D.OverlapCircle(
+                groundCheck.position, groundCheckRadius, groundLayer);
+        }
+
+        if (Keyboard.current.spaceKey.wasPressedThisFrame)
+            Debug.Log($"Space! isGrounded={isGrounded}, velY={rb.linearVelocity.y}");
 
         // Если движение заблокировано (фаза) — гасим горизонталь, но не трогаем Y
         if (!CanMove)
@@ -56,7 +59,6 @@ public class PlayerMovementPhysics : MonoBehaviour
         if (Keyboard.current.aKey.isPressed || Keyboard.current.leftArrowKey.isPressed) moveX = -1f;
         else if (Keyboard.current.dKey.isPressed || Keyboard.current.rightArrowKey.isPressed) moveX = 1f;
 
-        // Меняем ТОЛЬКО X, Y оставляем как есть (важно для прыжка!)
         rb.linearVelocity = new Vector2(moveX * speed, rb.linearVelocity.y);
 
         // --- Прыжок ---
@@ -71,7 +73,6 @@ public class PlayerMovementPhysics : MonoBehaviour
         else spriteRenderer.sprite = spriteFront;
     }
 
-    // Визуализация радиуса проверки земли в редакторе
     void OnDrawGizmosSelected()
     {
         if (groundCheck == null) return;
