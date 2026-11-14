@@ -12,40 +12,70 @@ public class PlayerMovementPhysics : MonoBehaviour
     [Header("Движение")]
     public float speed = 2.5f;
 
+    [Header("Прыжок")]
+    public float jumpForce = 7f;
+    public Transform groundCheck;
+    public float groundCheckRadius = 0.2f;
+    public LayerMask groundLayer;
+
     private SpriteRenderer spriteRenderer;
     private Rigidbody2D rb;
+    private bool isGrounded;
+
+    public bool CanMove { get; set; } = true;
 
     void Start()
     {
         spriteRenderer = GetComponent<SpriteRenderer>();
         rb = GetComponent<Rigidbody2D>();
-
-        // Отключаем гравитацию и вращение — персонаж не должен падать и крутиться
-        rb.gravityScale = 0f;
+        rb.gravityScale = 1f;          // гравитация обязательна для прыжка
         rb.freezeRotation = true;
-
         spriteRenderer.sprite = spriteFront;
     }
 
     void Update()
     {
+        if (Keyboard.current.spaceKey.wasPressedThisFrame)
+            Debug.Log($"Space! isGrounded={isGrounded}, velY={rb.linearVelocity.y}");   
+
         if (Keyboard.current == null) return;
 
-        float moveX = 0f;
-        float moveY = 0f;
+        // Проверка земли каждый кадр
+        isGrounded = Physics2D.OverlapCircle(
+            groundCheck.position, groundCheckRadius, groundLayer);
 
+        // Если движение заблокировано (фаза) — гасим горизонталь, но не трогаем Y
+        if (!CanMove)
+        {
+            rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
+            return;
+        }
+
+        // --- Горизонтальное движение ---
+        float moveX = 0f;
         if (Keyboard.current.aKey.isPressed || Keyboard.current.leftArrowKey.isPressed) moveX = -1f;
         else if (Keyboard.current.dKey.isPressed || Keyboard.current.rightArrowKey.isPressed) moveX = 1f;
 
+        // Меняем ТОЛЬКО X, Y оставляем как есть (важно для прыжка!)
+        rb.linearVelocity = new Vector2(moveX * speed, rb.linearVelocity.y);
 
-        // Движение через физику
-        Vector2 direction = new Vector2(moveX, moveY).normalized;
-        rb.linearVelocity = direction * speed;
-        // В старых версиях Unity: rb.velocity = direction * speed;
+        // --- Прыжок ---
+        if (Keyboard.current.spaceKey.wasPressedThisFrame && isGrounded)
+        {
+            rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
+        }
 
-        // Спрайты
+        // --- Спрайты ---
         if (moveX < 0f) spriteRenderer.sprite = spriteLeft;
         else if (moveX > 0f) spriteRenderer.sprite = spriteRight;
         else spriteRenderer.sprite = spriteFront;
+    }
+
+    // Визуализация радиуса проверки земли в редакторе
+    void OnDrawGizmosSelected()
+    {
+        if (groundCheck == null) return;
+        Gizmos.color = Color.red;
+        Gizmos.DrawWireSphere(groundCheck.position, groundCheckRadius);
     }
 }
