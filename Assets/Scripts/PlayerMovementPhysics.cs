@@ -18,11 +18,16 @@ public class PlayerMovementPhysics : MonoBehaviour
     public float groundCheckRadius = 0.2f;
     public LayerMask groundLayer;
 
+    [Header("Настройки поблажки прыжка (Coyote Time)")]
+    [SerializeField] private float coyoteTimeDuration = 0.15f; 
+    private float coyoteTimeCounter;
+
     private SpriteRenderer spriteRenderer;
     private Rigidbody2D rb;
     private bool isGrounded;
 
     public bool CanMove { get; set; } = true;
+    public bool CanJump { get; set; } = true; // Новое свойство для управления прыжками извне
 
     void Start()
     {
@@ -37,14 +42,21 @@ public class PlayerMovementPhysics : MonoBehaviour
     {
         if (Keyboard.current == null) return;
 
-        // Проверка земли (если объект groundCheck назначен)
         if (groundCheck != null)
         {
             isGrounded = Physics2D.OverlapCircle(
                 groundCheck.position, groundCheckRadius, groundLayer);
         }
 
-        // Если движение заблокировано
+        if (isGrounded)
+        {
+            coyoteTimeCounter = coyoteTimeDuration;
+        }
+        else
+        {
+            coyoteTimeCounter -= Time.deltaTime;
+        }
+
         if (!CanMove)
         {
             rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
@@ -58,10 +70,11 @@ public class PlayerMovementPhysics : MonoBehaviour
 
         rb.linearVelocity = new Vector2(moveX * speed, rb.linearVelocity.y);
 
-        // --- Прыжок ---
-        if (Keyboard.current.spaceKey.wasPressedThisFrame && isGrounded)
+        // --- Прыжок с учетом Coyote Time и флага CanJump ---
+        if (Keyboard.current.spaceKey.wasPressedThisFrame && coyoteTimeCounter > 0f && CanJump)
         {
             rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
+            coyoteTimeCounter = 0f; 
         }
 
         // --- Смена спрайтов ---
