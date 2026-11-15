@@ -8,39 +8,43 @@ public class CharacterFormSwitcher : MonoBehaviour
     [System.Serializable]
     public class CharacterForm
     {
-        public string formName; 
-        
+        public string formName;
+
         [Header("4 картинки персонажа")]
-        public Sprite defaultSprite;     
-        public Sprite spriteFront;       
-        public Sprite spriteLeft;        
-        public Sprite spriteRight;       
+        public Sprite defaultSprite;
+        public Sprite spriteFront;
+        public Sprite spriteLeft;
+        public Sprite spriteRight;
 
         [Header("Параметры формы")]
         public float formSpeed = 2.5f;   // Индивидуальная скорость для этой формы
 
         [Header("Способности и ограничения")]
-        public bool canPhase;            
-        public bool cantJump;            
+        public bool canPhase;
+        public bool cantJump;
 
         [Header("Эффекты одержимости (раздельные)")]
-        public bool canBeInvisible;      
-        public bool canBeSlowed;         
-        public bool canBeConstantMoving; 
-        public bool canBeInverted;       
+        public bool canBeInvisible;
+        public bool canBeSlowed;
+        public bool canBeConstantMoving;
+        public bool canBeInverted;
     }
 
     [Header("Список всех персонажей")]
     public List<CharacterForm> forms = new List<CharacterForm>();
 
+    [Header("Звук смены формы")]
+    [SerializeField] private AudioSource audioSource;
+    [SerializeField] private AudioClip swapSound;
+
     [Header("UI для предупреждения об одержимости")]
-    [SerializeField] private Text possessionText; 
+    [SerializeField] private Text possessionText;
 
     [Header("Настройки безопасности")]
-    [SerializeField] private float safeWindowDuration = 2f; 
+    [SerializeField] private float safeWindowDuration = 2f;
 
     private int currentFormIndex = 0;
-    private int unlockedFormLimit = 1; 
+    private int unlockedFormLimit = 1;
 
     private SpriteRenderer spriteRenderer;
     private PlayerMovementPhysics movementScript;
@@ -48,7 +52,7 @@ public class CharacterFormSwitcher : MonoBehaviour
 
     private float possessionTimer = 0f;
     private bool isPossessed = false;
-    private int activePossessionType = 0; 
+    private int activePossessionType = 0;
     private float currentFormBaseSpeed = 2.5f; // Базовая скорость текущей формы (до дебаффов)   
 
     private float safeWindowTimer = 0f;
@@ -61,14 +65,19 @@ public class CharacterFormSwitcher : MonoBehaviour
         movementScript = GetComponent<PlayerMovementPhysics>();
         phaseScript = GetComponent<PlayerPhase>();
 
+        if (audioSource == null)
+        {
+            audioSource = GetComponent<AudioSource>();
+        }
+
         if (possessionText != null)
         {
-            possessionText.text = ""; 
+            possessionText.text = "";
         }
 
         if (forms.Count > 0)
         {
-            ApplyForm(0); 
+            ApplyForm(0);
         }
     }
 
@@ -116,8 +125,13 @@ public class CharacterFormSwitcher : MonoBehaviour
     public void NextForm()
     {
         if (forms.Count == 0) return;
-        
+
         if (isPossessed) EndPossession();
+
+        if (audioSource != null && swapSound != null)
+        {
+            audioSource.PlayOneShot(swapSound);
+        }
 
         currentFormIndex = (currentFormIndex + 1) % unlockedFormLimit;
         ApplyForm(currentFormIndex);
@@ -168,10 +182,10 @@ public class CharacterFormSwitcher : MonoBehaviour
     {
         List<int> availableEffects = new List<int>();
 
-        if (form.canBeInvisible) availableEffects.Add(1); 
-        if (form.canBeSlowed) availableEffects.Add(2);    
-        if (form.canBeConstantMoving) availableEffects.Add(3); 
-        if (form.canBeInverted) availableEffects.Add(4);       
+        if (form.canBeInvisible) availableEffects.Add(1);
+        if (form.canBeSlowed) availableEffects.Add(2);
+        if (form.canBeConstantMoving) availableEffects.Add(3);
+        if (form.canBeInverted) availableEffects.Add(4);
 
         if (availableEffects.Count == 0) return;
 
@@ -186,7 +200,7 @@ public class CharacterFormSwitcher : MonoBehaviour
             if (spriteRenderer != null)
             {
                 Color c = spriteRenderer.color;
-                c.a = 0f; 
+                c.a = 0f;
                 spriteRenderer.color = c;
             }
 

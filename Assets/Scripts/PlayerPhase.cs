@@ -9,12 +9,16 @@ public class PlayerPhase : MonoBehaviour
     [Header("Спрайты анимации (3 кадра)")]
     public Sprite[] phaseSprites = new Sprite[3];
 
+    [Header("Звук")]
+    public AudioSource audioSource;
+    public AudioClip phaseSound;
+
     [Header("Параметры времени")]
     [Tooltip("Скорость смены кадров анимации растворения")]
     public float animFrameRate = 0.1f;
 
     [Tooltip("Сколько времени уходит на то, чтобы стать бледным (в 3 раза быстрее обычного)")]
-    public float fadeOutDuration = 0.33f; 
+    public float fadeOutDuration = 0.33f;
 
     [Tooltip("Общее время от нажатия X до возвращения в норму (ровно 3 секунды)")]
     public float totalPhaseDuration = 3f;
@@ -42,6 +46,10 @@ public class PlayerPhase : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
         colliders = GetComponents<Collider2D>();
         movement = GetComponent<PlayerMovementPhysics>();
+
+        // Если не перетащил AudioSource вручную — скрипт сам найдет его на персонаже
+        if (audioSource == null)
+            audioSource = GetComponent<AudioSource>();
     }
 
     void Update()
@@ -50,6 +58,9 @@ public class PlayerPhase : MonoBehaviour
 
         if (Keyboard.current.xKey.wasPressedThisFrame && !isPhasing)
         {
+            if (audioSource != null && phaseSound != null)
+                audioSource.PlayOneShot(phaseSound);
+
             StartCoroutine(PhaseCoroutine());
         }
     }
@@ -65,14 +76,14 @@ public class PlayerPhase : MonoBehaviour
         // 1. Быстрое побледнение (в 3 раза быстрее)
         if (movement != null) movement.CanMove = false;
         rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
-        
+
         yield return FadeWithAnimation(1f, minAlpha, fadeOutDuration);
         timer += fadeOutDuration;
 
         // 2. Включаем фазирование (проход сквозь стены)
         if (disableAllColliders)
         {
-            rb.gravityScale = 0f; 
+            rb.gravityScale = 0f;
             rb.linearVelocity = Vector2.zero;
             foreach (var col in colliders) col.enabled = false;
         }
