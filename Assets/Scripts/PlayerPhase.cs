@@ -6,16 +6,28 @@ using UnityEngine.InputSystem;
 [RequireComponent(typeof(SpriteRenderer))]
 public class PlayerPhase : MonoBehaviour
 {
-    [Header("Спрайты анимации (3 кадра)")]
+    [Header("РЎРїСЂР°Р№С‚С‹ Р°РЅРёРјР°С†РёРё (3 РєР°РґСЂР°)")]
     public Sprite[] phaseSprites = new Sprite[3];
 
-    [Header("Настройки")]
-    public float fadeDuration = 1f;
-    public float invisibleDuration = 5f;
+    [Header("РџР°СЂР°РјРµС‚СЂС‹ РІСЂРµРјРµРЅРё")]
+    [Tooltip("РЎРєРѕСЂРѕСЃС‚СЊ СЃРјРµРЅС‹ РєР°РґСЂРѕРІ Р°РЅРёРјР°С†РёРё СЂР°СЃС‚РІРѕСЂРµРЅРёСЏ")]
     public float animFrameRate = 0.1f;
 
-    [Header("Физика в фазе")]
-    [Tooltip("Если включено, выключает коллайдеры и гравитацию (чтобы не провалиться сквозь пол)")]
+    [Tooltip("РЎРєРѕР»СЊРєРѕ РІСЂРµРјРµРЅРё СѓС…РѕРґРёС‚ РЅР° С‚Рѕ, С‡С‚РѕР±С‹ СЃС‚Р°С‚СЊ Р±Р»РµРґРЅС‹Рј (РІ 3 СЂР°Р·Р° Р±С‹СЃС‚СЂРµРµ РѕР±С‹С‡РЅРѕРіРѕ)")]
+    public float fadeOutDuration = 0.33f; 
+
+    [Tooltip("РћР±С‰РµРµ РІСЂРµРјСЏ РѕС‚ РЅР°Р¶Р°С‚РёСЏ X РґРѕ РІРѕР·РІСЂР°С‰РµРЅРёСЏ РІ РЅРѕСЂРјСѓ (СЂРѕРІРЅРѕ 3 СЃРµРєСѓРЅРґС‹)")]
+    public float totalPhaseDuration = 3f;
+
+    [Tooltip("РЎРєРѕСЂРѕСЃС‚СЊ РІРѕР·РІСЂР°С‰РµРЅРёСЏ РѕР±С‹С‡РЅРѕРіРѕ С†РІРµС‚Р° РІ РєРѕРЅС†Рµ")]
+    public float fadeInDuration = 0.33f;
+
+    [Range(0f, 1f)]
+    [Tooltip("РњРёРЅРёРјР°Р»СЊРЅР°СЏ РїСЂРѕР·СЂР°С‡РЅРѕСЃС‚СЊ РІ РјРѕРјРµРЅС‚ С„Р°Р·РёСЂРѕРІР°РЅРёСЏ")]
+    public float minAlpha = 0.4f;
+
+    [Header("РљРѕР»Р»РёР·РёРё Рё С„РёР·РёРєР°")]
+    [Tooltip("Р•СЃР»Рё РІРєР»СЋС‡РµРЅРѕ, РѕС‚РєР»СЋС‡Р°СЋС‚СЃСЏ РєРѕР»Р»Р°Р№РґРµСЂС‹ Рё РіСЂР°РІРёС‚Р°С†РёСЏ (РјРѕР¶РЅРѕ РїСЂРѕС…РѕРґРёС‚СЊ СЃРєРІРѕР·СЊ СЃС‚РµРЅС‹)")]
     public bool disableAllColliders = true;
 
     private SpriteRenderer spriteRenderer;
@@ -47,24 +59,31 @@ public class PlayerPhase : MonoBehaviour
         isPhasing = true;
         float originalGravity = rb.gravityScale;
 
-        // 1. Исчезновение (1 сек) — горизонтальное движение заблокировано
+        // Р¤РёРєСЃРёСЂСѓРµРј РјРѕРјРµРЅС‚ РЅР°Р¶Р°С‚РёСЏ РґР»СЏ СЃС‚СЂРѕРіРѕРіРѕ РѕС‚СЃС‡РµС‚Р° 3 СЃРµРєСѓРЅРґ
+        float timer = 0f;
+
+        // 1. Р‘С‹СЃС‚СЂРѕРµ РїРѕР±Р»РµРґРЅРµРЅРёРµ (РІ 3 СЂР°Р·Р° Р±С‹СЃС‚СЂРµРµ)
         if (movement != null) movement.CanMove = false;
         rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
-        yield return FadeWithAnimation(1f, 0f);
+        
+        yield return FadeWithAnimation(1f, minAlpha, fadeOutDuration);
+        timer += fadeOutDuration;
 
-        // 2. Невидимость (5 сек) — движение РАЗБЛОКИРОВАНО
+        // 2. Р’РєР»СЋС‡Р°РµРј С„Р°Р·РёСЂРѕРІР°РЅРёРµ (РїСЂРѕС…РѕРґ СЃРєРІРѕР·СЊ СЃС‚РµРЅС‹)
         if (disableAllColliders)
         {
-            rb.gravityScale = 0f; // Выключаем гравитацию, чтобы не улететь сквозь пол
+            rb.gravityScale = 0f; 
             rb.linearVelocity = Vector2.zero;
             foreach (var col in colliders) col.enabled = false;
         }
 
         if (movement != null) movement.CanMove = true;
 
-        yield return new WaitForSeconds(invisibleDuration);
+        // 3. Р–РґРµРј РѕСЃС‚Р°РІС€РµРµСЃСЏ РІСЂРµРјСЏ РґРѕ РєРѕРЅС†Р° 3-СЃРµРєСѓРЅРґРЅРѕРіРѕ РёРЅС‚РµСЂРІР°Р»Р°
+        float remainingTime = Mathf.Max(0f, totalPhaseDuration - timer);
+        yield return new WaitForSeconds(remainingTime);
 
-        // 3. Перед появлением — снова блокируем движение и возвращаем коллайдеры
+        // 4. РџРѕРґРіРѕС‚РѕРІРєР° Рє РІРѕР·РІСЂР°С‰РµРЅРёСЋ (Р·Р°РїСЂРµС‰Р°РµРј РґРІРёР¶РµРЅРёРµ, РІРѕР·РІСЂР°С‰Р°РµРј С„РёР·РёРєСѓ/РєРѕР»Р»Р°Р№РґРµСЂС‹)
         if (movement != null) movement.CanMove = false;
         rb.linearVelocity = Vector2.zero;
 
@@ -74,10 +93,10 @@ public class PlayerPhase : MonoBehaviour
             rb.gravityScale = originalGravity;
         }
 
-        // 4. Появление (1 сек) — движение заблокировано
-        yield return FadeWithAnimation(0f, 1f);
+        // 5. Р‘С‹СЃС‚СЂРѕРµ РІРѕР·РІСЂР°С‰РµРЅРёРµ РѕР±С‹С‡РЅРѕР№ РІРёРґРёРјРѕСЃС‚Рё
+        yield return FadeWithAnimation(minAlpha, 1f, fadeInDuration);
 
-        // 5. Возвращаем управление и базовый спрайт
+        // 6. Р—Р°РІРµСЂС€РµРЅРёРµ
         if (movement != null)
         {
             if (movement.spriteFront != null)
@@ -88,13 +107,16 @@ public class PlayerPhase : MonoBehaviour
         isPhasing = false;
     }
 
-    private IEnumerator FadeWithAnimation(float fromAlpha, float toAlpha)
+    private IEnumerator FadeWithAnimation(float fromAlpha, float toAlpha, float duration)
     {
+        // Р—Р°С‰РёС‚Р° РѕС‚ РґРµР»РµРЅРёСЏ РЅР° РЅРѕР»СЊ
+        if (duration <= 0f) duration = 0.01f;
+
         float elapsed = 0f;
         int frameIndex = 0;
         float frameTimer = 0f;
 
-        while (elapsed < fadeDuration)
+        while (elapsed < duration)
         {
             elapsed += Time.deltaTime;
             frameTimer += Time.deltaTime;
@@ -107,7 +129,7 @@ public class PlayerPhase : MonoBehaviour
                 frameIndex = (frameIndex + 1) % phaseSprites.Length;
             }
 
-            float alpha = Mathf.Lerp(fromAlpha, toAlpha, elapsed / fadeDuration);
+            float alpha = Mathf.Lerp(fromAlpha, toAlpha, elapsed / duration);
             Color c = spriteRenderer.color;
             c.a = alpha;
             spriteRenderer.color = c;
