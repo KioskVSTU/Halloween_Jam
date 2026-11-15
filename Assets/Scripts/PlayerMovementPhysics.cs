@@ -27,7 +27,12 @@ public class PlayerMovementPhysics : MonoBehaviour
     private bool isGrounded;
 
     public bool CanMove { get; set; } = true;
-    public bool CanJump { get; set; } = true; // Новое свойство для управления прыжками извне
+    public bool CanJump { get; set; } = true; 
+
+    public bool IsConstantMoving { get; set; } = false;
+    public bool IsInverted { get; set; } = false;
+
+    private float lastFacingDirection = 1f;
 
     void Start()
     {
@@ -63,10 +68,30 @@ public class PlayerMovementPhysics : MonoBehaviour
             return;
         }
 
-        // --- Горизонтальное движение ---
+        // --- Горизонтальное движение с учетом инверсии и постоянного бега ---
         float moveX = 0f;
-        if (Keyboard.current.aKey.isPressed || Keyboard.current.leftArrowKey.isPressed) moveX = -1f;
-        else if (Keyboard.current.dKey.isPressed || Keyboard.current.rightArrowKey.isPressed) moveX = 1f;
+        bool leftPressed = Keyboard.current.aKey.isPressed || Keyboard.current.leftArrowKey.isPressed;
+        bool rightPressed = Keyboard.current.dKey.isPressed || Keyboard.current.rightArrowKey.isPressed;
+
+        if (IsInverted)
+        {
+            if (leftPressed) moveX = 1f;
+            else if (rightPressed) moveX = -1f;
+        }
+        else
+        {
+            if (leftPressed) moveX = -1f;
+            else if (rightPressed) moveX = 1f;
+        }
+
+        if (IsConstantMoving)
+        {
+            if (moveX != 0f)
+            {
+                lastFacingDirection = Mathf.Sign(moveX);
+            }
+            moveX = lastFacingDirection;
+        }
 
         rb.linearVelocity = new Vector2(moveX * speed, rb.linearVelocity.y);
 

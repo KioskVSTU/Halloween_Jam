@@ -5,26 +5,25 @@ public class ButtonSequenceChecker : MonoBehaviour
 {
     [Header("UI")]
     [SerializeField] private Text infoText;
-    [Header("Иконка нового персонажа в UI (например, портрет второго героя)")]
-    [SerializeField] private GameObject characterIconUI; 
+    
+    [Header("Иконки персонажей в UI")]
+    [SerializeField] private GameObject ghostIconUI;   // Иконка Призрака (открывается после 3 кнопок)
+    [SerializeField] private GameObject scarecrowIconUI; // Иконка Пугала (открывается после 6 кнопок)
+    [SerializeField] private GameObject wolfIconUI;     // Иконка Волка (открывается после 8 кнопок)
 
     [Header("Ссылка на игрока (где висит CharacterFormSwitcher)")]
     [SerializeField] private CharacterFormSwitcher formSwitcher;
 
-    private int clickedCount = 0;
-    private bool isUnlocked = false; 
+    private int totalClickedCount = 0;
 
-    // Отдельные флаги для каждой из трех кнопок, чтобы нельзя было нажать одну и ту же
-    private bool firstButtonClicked = false;
-    private bool secondButtonClicked = false;
-    private bool thirdButtonClicked = false;
+    // Флаги, чтобы нельзя было кликать по уже активированным кнопкам повторно (пример для 8 уникальных кнопок)
+    private bool btn1, btn2, btn3, btn4, btn5, btn6, btn7, btn8;
 
     void Start()
     {
-        if (characterIconUI != null)
-        {
-            characterIconUI.SetActive(false);
-        }
+        if (ghostIconUI) ghostIconUI.SetActive(false);
+        if (scarecrowIconUI) scarecrowIconUI.SetActive(false);
+        if (wolfIconUI) wolfIconUI.SetActive(false);
 
         if (formSwitcher == null)
         {
@@ -32,62 +31,45 @@ public class ButtonSequenceChecker : MonoBehaviour
         }
     }
 
-    // Метод для первой кнопки
-    public void OnFirstButtonClicked()
-    {
-        if (isUnlocked || firstButtonClicked) return; // Если уже нажата — ничего не делаем
-        
-        firstButtonClicked = true;
-        RegisterUniqueClick();
-    }
+    // Методы для привязки к кнопкам (по одному на каждую кнопку уровня)
+    public void OnButtonClicked_1() { if (!btn1) { btn1 = true; RegisterClick(); } }
+    public void OnButtonClicked_2() { if (!btn2) { btn2 = true; RegisterClick(); } }
+    public void OnButtonClicked_3() { if (!btn3) { btn3 = true; RegisterClick(); } }
+    public void OnButtonClicked_4() { if (!btn4) { btn4 = true; RegisterClick(); } }
+    public void OnButtonClicked_5() { if (!btn5) { btn5 = true; RegisterClick(); } }
+    public void OnButtonClicked_6() { if (!btn6) { btn6 = true; RegisterClick(); } }
+    public void OnButtonClicked_7() { if (!btn7) { btn7 = true; RegisterClick(); } }
+    public void OnButtonClicked_8() { if (!btn8) { btn8 = true; RegisterClick(); } }
 
-    // Метод для второй кнопки
-    public void OnSecondButtonClicked()
+    private void RegisterClick()
     {
-        if (isUnlocked || secondButtonClicked) return; 
-        
-        secondButtonClicked = true;
-        RegisterUniqueClick();
-    }
-
-    // Метод для третьей кнопки
-    public void OnThirdButtonClicked()
-    {
-        if (isUnlocked || thirdButtonClicked) return; 
-        
-        thirdButtonClicked = true;
-        RegisterUniqueClick();
-    }
-
-    // Общий метод для подсчета уникальных кликов
-    private void RegisterUniqueClick()
-    {
-        clickedCount++;
+        totalClickedCount++;
 
         if (infoText != null)
         {
-            infoText.text = $"Найдено {clickedCount} из трех";
+            infoText.text = $"Найдено предметов: {totalClickedCount} из 8";
         }
 
-        if (clickedCount >= 3)
+        // Этап 1: Первые 3 кнопки -> Открываем Призрака (индекс 1)
+        if (totalClickedCount == 3)
         {
-            UnlockNewCharacter();
+            if (ghostIconUI) ghostIconUI.SetActive(true);
+            if (formSwitcher != null) formSwitcher.UnlockNextFormTier();
+            Debug.Log("Призрак разблокирован!");
         }
-    }
-
-    private void UnlockNewCharacter()
-    {
-        isUnlocked = true;
-        Debug.Log("Победа! Все 3 разные кнопки собраны, персонаж разблокирован!");
-
-        if (characterIconUI != null)
+        // Этап 2: Следующие 3 кнопки (всего 6) -> Открываем Пугало (индекс 2)
+        else if (totalClickedCount == 6)
         {
-            characterIconUI.SetActive(true);
+            if (scarecrowIconUI) scarecrowIconUI.SetActive(true);
+            if (formSwitcher != null) formSwitcher.UnlockNextFormTier();
+            Debug.Log("Пугало разблокировано!");
         }
-
-        if (formSwitcher != null)
+        // Этап 3: Последние 2 кнопки (всего 8) -> Открываем Волка (индекс 3)
+        else if (totalClickedCount == 8)
         {
-            formSwitcher.UnlockFormAccess();
+            if (wolfIconUI) wolfIconUI.SetActive(true);
+            if (formSwitcher != null) formSwitcher.UnlockNextFormTier();
+            Debug.Log("Волк разблокирован! Все формы доступны!");
         }
     }
 }
